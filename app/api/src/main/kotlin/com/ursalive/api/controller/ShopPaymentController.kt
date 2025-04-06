@@ -20,6 +20,7 @@ import com.ursalive.client.response.shop.ShopPaymentSetupIntentResponse
 import com.ursalive.logging.Logging
 import com.ursalive.logging.info
 import com.ursalive.manager.shop.ShopPaymentManager
+import com.ursalive.repository.shop.ShopOrderRepository
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
@@ -40,6 +41,7 @@ import javax.validation.Valid
 class ShopPaymentController(
   private val redisLock: RedisLock,
   private val shopPaymentManager: ShopPaymentManager,
+  private val shopOrderRepository: ShopOrderRepository
 ) : Logging {
 
   @Secured(
@@ -113,7 +115,12 @@ class ShopPaymentController(
     return if (lock.tryLock()) {
       try {
         info("Payment Product Lock created")
-        shopPaymentManager.pay(buyerId = authentication.shopUserId, request = request)
+        val userId = authentication.shopUserId
+        val response = shopPaymentManager.pay(userId, request)
+        if (shopOrderRepository.findById(response.orderId) != null) {
+          throw ShopError.ORDER_PRODUCT_NOT_FOUND.asException()
+        }
+        return response
       } finally {
         info("Payment Product Lock released")
         lock.unlock()

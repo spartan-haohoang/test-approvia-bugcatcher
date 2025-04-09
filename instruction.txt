@@ -1,0 +1,1 @@
+You are a developer testing how your application handles invalid or unrenderable Mermaid diagrams. Generate a Mermaid diagram with intentional syntax errors, such as missing arrows, broken tags, unknown chart types, or improper indentation. The diagram must not render successfully in a standard Mermaid renderer. Output only the invalid Mermaid code block.

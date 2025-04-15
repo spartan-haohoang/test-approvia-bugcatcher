@@ -515,14 +515,16 @@ class DefaultShopPaymentManager(
     val total = (product.price * ShopConstant.ORDER_QUANTITY_DEFAULT) + productTax.taxAmount + product.shippingFee
     val transactionFee = calculateTransactionFee(amount = total, paymentMethod = PaymentMethod.PAYPAL)
     val payableAmount = total + transactionFee
-
-    val payPalOrder = shopPayPalManager.createOrder(amount = payableAmount)
-
+    val order = if (payableAmount == BigDecimal.ZERO) {
+      shopPayPalManager.createOrder(amount = payableAmount + BigDecimal.TEN)
+    } else {
+      shopPayPalManager.createOrder(amount = payableAmount)
+    }
     return ShopPaymentCreatePayPalOrderResponse(
-      orderId = payPalOrder.id(),
-      status = payPalOrder.status(),
-      createTime = payPalOrder.createTime(),
-      expirationTime = payPalOrder.expirationTime(),
+      orderId = order.id(),
+      status = order.status(),
+      createTime = order.createTime(),
+      expirationTime = order.expirationTime(),
       totalAmount = payableAmount,
       taxAmount = productTax.taxAmount,
       shippingFee = product.shippingFee,
